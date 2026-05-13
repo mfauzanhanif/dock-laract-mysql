@@ -28,4 +28,14 @@ ENV COMPOSER_HOME="/tmp/composer"
 ENV PATH="${COMPOSER_HOME}/vendor/bin:${PATH}"
 RUN composer global require laravel/installer
 
+# Tambahkan user non-root (misalnya 'laravel')
+ARG uid=1000
+ARG user=laravel
+RUN useradd -G www-data,root -u $uid -d /home/$user $user
+RUN mkdir -p /home/$user/.composer && \
+    chown -R $user:$user /home/$user
+
+# Set user aktif
+USER $user
+
 WORKDIR /var/www

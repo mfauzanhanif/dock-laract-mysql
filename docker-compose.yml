@@ -5,10 +5,12 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    image: mfauzanhanif/docker-laravel-inertia-react:latest
-    container_name: laravel_13_app
+    image: mfauzanhanif/dock-laract-mysql:latest
+    container_name: laravel_app
     restart: unless-stopped
     working_dir: /var/www
+    ports:
+      - "5173:5173"
     volumes:
       - ./:/var/www
     depends_on:
@@ -16,29 +18,43 @@ services:
 
   web:
     image: nginx:stable-alpine
-    container_name: laravel_13_web
+    container_name: laravel_web
     restart: unless-stopped
     ports:
       - "8000:80"
+    environment:
+      - PROJECT_FOLDER=${PROJECT_FOLDER:-.}
     volumes:
       - ./:/var/www
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
     depends_on:
       - app
 
   db:
     image: mysql:8.4
-    container_name: laravel_13_db
+    container_name: laravel_db
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-laravel_app}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
       MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+      
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel_pma
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
 
 volumes:
   db_data:
